@@ -1,6 +1,7 @@
 """Data persistence for hobbies."""
 
 import json
+import sys
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from dataclasses import fields
@@ -32,13 +33,18 @@ class Hobby:
 
 class DataManager:
     """Manages hobby data persistence."""
-    
-    DATA_FILE = Path(__file__).resolve().parent.parent / "hobbies_data.json"
-    
+
+    DATA_FILENAME = "hobbies_data.json"
+
     def __init__(self):
-        # Make path absolute and stable relative to repo root
-        self.data_path = Path(self.DATA_FILE)
+        self.data_path = self._resolve_data_path()
         self.hobbies = self._load_hobbies()
+
+    def _resolve_data_path(self) -> Path:
+        """Choose a writable JSON path for source and frozen builds."""
+        if getattr(sys, "frozen", False):
+            return Path(sys.executable).resolve().parent / self.DATA_FILENAME
+        return Path(__file__).resolve().parent.parent / self.DATA_FILENAME
 
     def reload_hobbies(self):
         """Reload hobbies from disk."""
