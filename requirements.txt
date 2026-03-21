@@ -1,0 +1,8 @@
+# Requirements for Hobby Tracker
+# No external dependencies required - uses only Python standard library
+
+# Python 3.7+
+# tkinter (included with Python)
+# datetime (built-in)
+# calendar (built-in)
+# dataclasses (built-in, Python 3.7+)
