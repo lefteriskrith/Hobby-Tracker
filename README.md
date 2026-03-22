@@ -28,8 +28,11 @@
 ## App Preview
 
 <p align="center">
-  <img src="assets/screenshots/main-window.png" alt="Main window of Hobby Tracker" width="48%">
-  <img src="assets/screenshots/all-hobbies.png" alt="All hobbies preview window" width="48%">
+  <img src="assets/screenshots/main-window.png" alt="Main window of Hobby Tracker" width="78%">
+</p>
+
+<p align="center">
+  <img src="assets/screenshots/all-hobbies.png" alt="All hobbies preview window" width="78%">
 </p>
 
 ## What You Can Do
