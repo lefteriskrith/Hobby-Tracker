@@ -2,115 +2,95 @@
 
 <p align="center">
   <a href="https://github.com/lefteriskrith/hobby-tracker/raw/refs/heads/main/HobbyTracker.zip">
-    <img src="https://img.shields.io/badge/DOWNLOAD-HobbyTracker.zip-16a34a?style=for-the-badge&logo=github&logoColor=white&labelColor=0f172a" alt="Download HobbyTracker.zip" height="80">
+    <img src="https://img.shields.io/badge/Download-HobbyTracker.zip-f59e0b?style=for-the-badge&logo=github&logoColor=white&labelColor=111827" alt="Download HobbyTracker.zip">
   </a>
 </p>
 
 <p align="center">
-  <strong>Click the button above to download the app directly.</strong>
+  A polished desktop app for tracking hobbies, start dates, end dates, and personal notes with a clean dark interface.
 </p>
 
-A modern, polished application to track your hobbies and keep them organized over time.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.x-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.x">
+  <img src="https://img.shields.io/badge/UI-tkinter-111827?style=flat-square" alt="tkinter">
+  <img src="https://img.shields.io/badge/Storage-JSON-f97316?style=flat-square" alt="JSON storage">
+  <img src="https://img.shields.io/badge/Status-Desktop%20Ready-22c55e?style=flat-square" alt="Desktop ready">
+</p>
 
-## Features
+## Why It Feels Nice
 
-- 🗓️ **Interactive Calendar Picker** - Select start dates with an easy-to-use calendar widget
-- 📊 **Clean Overview** - View all saved hobbies in a simple preview
-- 🎨 **Modern UI** - Beautiful, polished interface with smooth interactions
-- ⚡ **Fast & Responsive** - Lightweight application with instant calculations
-- 📝 **Clean Codebase** - Well-organized, maintainable code structure
+- Clean dark theme with warm accent colors
+- Fast form-based workflow for adding hobbies in seconds
+- Built-in calendar picker so dates are easy and consistent
+- Expandable hobby list with edit and delete actions
+- Modular Python structure that is easy to maintain
 
-## Project Structure
+## App Preview
 
-```
-hobby-tracker/
-├── main.py              # Entry point - run this to start the app
-├── config.py            # Configuration, messages, colors, and fonts
-├── requirements.txt     # Python dependencies
-├── README.md            # This file
-├── gui/                 # User interface components
-│   ├── __init__.py
-│   ├── main_window.py   # Main application window
-│   └── widgets.py       # Custom widgets (DatePicker, FormField, Calendar)
-└── logic/               # Data persistence
-    ├── __init__.py
-    └── data_manager.py  # Hobby loading and saving
-```
+<p align="center">
+  <img src="assets/screenshots/main-window.png" alt="Main window of Hobby Tracker" width="48%">
+  <img src="assets/screenshots/all-hobbies.png" alt="All hobbies preview window" width="48%">
+</p>
 
-## How to Use
+## What You Can Do
 
-1. **Run the application:**
+- Add a hobby with start date, optional end date, and optional comments
+- Browse all saved hobbies in a dedicated overview window
+- Sort hobbies by name, started date, or duration
+- Expand each row to view extra details
+- Edit or delete entries whenever you want
+- Persist everything locally in `hobbies_data.json`
+
+## Quick Start
+
+1. Install dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Launch the app:
+
    ```bash
    python main.py
    ```
 
-2. **Enter hobby details:**
-   - Enter the name of your hobby (e.g., "Guitar", "Gym", "Running")
-   - Click "📅 Select Date" to pick your start date using the calendar
-   - Optionally add an end date and comments
+3. Add your hobbies and open `View All Hobbies` to manage them.
 
-3. **Manage your list:**
-   - Click "✅ Add new hobby" to save it
-   - Open "📊 View All Hobbies" to see every saved hobby
-   - Use the action buttons to edit or delete entries
+## Project Structure
 
-4. **Clear fields:**
-   - Click "Clear" to reset all fields and try again
+```text
+hobby-tracker/
+|-- main.py
+|-- config.py
+|-- requirements.txt
+|-- hobbies_data.json
+|-- assets/
+|   `-- screenshots/
+|       |-- main-window.png
+|       `-- all-hobbies.png
+|-- gui/
+|   |-- __init__.py
+|   |-- main_window.py
+|   `-- widgets.py
+`-- logic/
+    |-- __init__.py
+    `-- data_manager.py
+```
 
-## Features in Detail
+## Tech Stack
 
-### Calendar Date Picker
-- No manual date typing needed - just click the button and select from a calendar
-- Navigate months easily with arrow buttons
-- Current day is highlighted
-- Cannot select future dates
+- Python 3
+- tkinter
+- JSON for local persistence
+- Standard library modules like `datetime`, `calendar`, `json`, and `pathlib`
 
-### Hobby Overview
-- **Start Date**: When you began the hobby
-- **End Date**: When you stopped it, if applicable
-- **Duration**: Years, months, and days between start and end/today
-- **Comments**: Optional notes for each hobby
+## Notes
 
-### User Interface
-- **Clean Design**: Minimalist interface with warm, pleasant colors
-- **Responsive Layout**: Adapts to the window size
-- **Owner Attribution**: "LefterisKr" credited at the bottom
-- **Professional Polish**: Modern fonts and smooth interactions
-
-## Technologies
-
-- **Python 3.x**
-- **tkinter** - Built-in Python GUI framework
-- Standard library modules: `datetime`, `calendar`, `dataclasses`, `json`, `pathlib`
-
-## Code Architecture
-
-### Separation of Concerns
-- **config.py**: All configuration in one place (messages, colors, fonts)
-- **logic/data_manager.py**: Data model and JSON persistence
-- **gui/main_window.py**: Main window and application flow
-- **gui/widgets.py**: Reusable UI components
-
-### Benefits
-- ✅ Easy to maintain and update
-- ✅ Simple to add new features
-- ✅ Logic can be tested independently
-- ✅ UI is separated from business logic
-- ✅ Easy to reuse widgets in other projects
-
-## Future Enhancements
-
-- Save hobby data to a file or database
-- View historical data with graphs
-- Set goals and track progress toward them
-- Export statistics as reports
-- Dark mode theme option
-- Multiple hobby tracking simultaneously
+- `main.py` is the current entry point
+- `app.py` is kept only as a deprecated reference
+- The app is designed for local desktop use and stores data on the machine
 
 ## License
 
-Created for hobby tracking and personal use.
-
----
-
-**Developed by**: LefterisKr
+Created for personal use by LefterisKr.
