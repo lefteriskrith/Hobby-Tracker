@@ -1,5 +1,11 @@
 # Hobby Tracker
 
+<p>
+  <a href="./HobbyTracker.zip" download>
+    <img src="https://img.shields.io/badge/Download-HobbyTracker.zip-2ea44f?style=for-the-badge" alt="Download HobbyTracker.zip">
+  </a>
+</p>
+
 A modern, polished application to track your hobbies and keep them organized over time.
 
 ## Features
