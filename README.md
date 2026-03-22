@@ -34,7 +34,7 @@ Hobby Tracker is a lightweight desktop app built for people who want a simple wa
 
 <p align="center">
   <img src="assets/screenshots/main-window.png" alt="Main window of Hobby Tracker" width="42%">
-  <img src="assets/screenshots/all-hobbies.png" alt="All hobbies preview window" width="54%">
+  <img src="assets/screenshots/all-hobbies.png" alt="All hobbies preview window" width="60%">
 </p>
 
 <p align="center">
