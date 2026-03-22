@@ -397,12 +397,16 @@ class FormField(tk.Frame):
 class PreviewWindow:
     """A window to preview all saved hobbies as a table-like grid."""
     
-    COLUMN_WIDTHS = (5, 30, 16, 14, 18)
+    COLUMN_WIDTHS = (5, 28, 18, 16, 18)
     
     def __init__(self, hobbies, on_edit_callback=None, on_delete_callback=None):
         self.hobbies = hobbies
         self.on_edit_callback = on_edit_callback
         self.on_delete_callback = on_delete_callback
+        self.sort_column = None
+        self.sort_descending = False
+        self.sortable_headers = {}
+        self.rows_frame = None
         self.window = tk.Toplevel()
         self.window.title("All Hobbies Preview")
         self.window.geometry("900x600")
@@ -437,15 +441,42 @@ class PreviewWindow:
                 header_padx = (8, 2)
             elif col_index == 1:
                 header_padx = (0, 8)
-            tk.Label(
-                table_header,
-                text=header_text,
-                font=("Segoe UI", 10, "bold"),
-                bg=COLORS["bg_accent"],
-                fg=COLORS["text_primary"],
-                width=width,
-                anchor="w" if col_index == 1 else "center",
-            ).grid(row=0, column=col_index, padx=header_padx, pady=8, ipady=5, sticky="nsew")
+            sort_key = None
+            if header_text == "Hobby Name":
+                sort_key = "name"
+            elif header_text == "Started":
+                sort_key = "started"
+            elif header_text == "Duration":
+                sort_key = "duration"
+
+            if sort_key:
+                btn = tk.Button(
+                    table_header,
+                    text=header_text,
+                    command=lambda key=sort_key: self._sort_by(key),
+                    font=("Segoe UI", 10, "bold"),
+                    bg=COLORS["bg_accent"],
+                    fg=COLORS["text_primary"],
+                    activebackground=COLORS["bg_hover"],
+                    activeforeground=COLORS["text_primary"],
+                    relief="flat",
+                    bd=0,
+                    width=width,
+                    cursor="hand2",
+                    anchor="w" if col_index in {1, 2, 3} else "center",
+                )
+                btn.grid(row=0, column=col_index, padx=header_padx, pady=8, ipady=5, sticky="nsew")
+                self.sortable_headers[sort_key] = btn
+            else:
+                tk.Label(
+                    table_header,
+                    text=header_text,
+                    font=("Segoe UI", 10, "bold"),
+                    bg=COLORS["bg_accent"],
+                    fg=COLORS["text_primary"],
+                    width=width,
+                    anchor="w" if col_index in {1, 2, 3} else "center",
+                ).grid(row=0, column=col_index, padx=header_padx, pady=8, ipady=5, sticky="nsew")
         
         # Scrollable frame for hobbies
         canvas_frame = tk.Frame(self.window, bg=COLORS["bg_main"])
@@ -472,25 +503,106 @@ class PreviewWindow:
         
         canvas.bind("<Configure>", _sync_scrollable_width)
         
-        if self.hobbies:
-            for i, hobby in enumerate(self.hobbies):
-                self._create_hobby_row(scrollable_frame, hobby, i % 2 == 0)
-        else:
-            tk.Label(
-                scrollable_frame,
-                text="No hobbies yet. Add one to get started!",
-                font=("Segoe UI", 12),
-                bg=COLORS["bg_main"],
-                fg=COLORS["text_secondary"],
-            ).pack(pady=30)
+        self.rows_frame = scrollable_frame
+        self._render_hobby_rows()
         
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+
+    def _render_hobby_rows(self):
+        """Render hobby rows using the current sort order."""
+        for widget in self.rows_frame.winfo_children():
+            widget.destroy()
+
+        sorted_hobbies = self._get_sorted_hobbies()
+
+        if sorted_hobbies:
+            for i, hobby in enumerate(sorted_hobbies):
+                self._create_hobby_row(self.rows_frame, hobby, i % 2 == 0)
+            return
+
+        tk.Label(
+            self.rows_frame,
+            text="No hobbies yet. Add one to get started!",
+            font=("Segoe UI", 12),
+            bg=COLORS["bg_main"],
+            fg=COLORS["text_secondary"],
+        ).pack(pady=30)
+
+    def _get_sorted_hobbies(self):
+        """Return hobbies ordered by the active sort column."""
+        hobbies = list(self.hobbies)
+
+        if self.sort_column == "name":
+            return sorted(
+                hobbies,
+                key=lambda hobby: hobby.name.lower(),
+                reverse=self.sort_descending,
+            )
+
+        if self.sort_column == "started":
+            return sorted(
+                hobbies,
+                key=self._get_started_sort_value,
+                reverse=self.sort_descending,
+            )
+
+        if self.sort_column == "duration":
+            return sorted(
+                hobbies,
+                key=self._get_duration_days,
+                reverse=self.sort_descending,
+            )
+
+        return hobbies
+
+    def _sort_by(self, column):
+        """Toggle sorting for a specific column and refresh the table."""
+        if self.sort_column == column:
+            self.sort_descending = not self.sort_descending
+        else:
+            self.sort_column = column
+            self.sort_descending = column in {"started", "duration"}
+
+        self._update_header_labels()
+        self._render_hobby_rows()
+
+    def _update_header_labels(self):
+        """Refresh sort arrows in clickable headers."""
+        for column, button in self.sortable_headers.items():
+            label_map = {
+                "name": "Hobby Name",
+                "started": "Started",
+                "duration": "Duration",
+            }
+            label = label_map[column]
+            if column == self.sort_column:
+                arrow = "▼" if self.sort_descending else "▲"
+                label = f"{label} {arrow}"
+            button.config(text=label)
+
+    def _get_started_sort_value(self, hobby):
+        """Return the hobby start date for sorting."""
+        try:
+            return datetime.strptime(hobby.start_date, "%Y-%m-%d").date()
+        except Exception:
+            return date.min
+
+    def _get_duration_days(self, hobby):
+        """Calculate total duration in days for sorting."""
+        try:
+            start_date_obj = datetime.strptime(hobby.start_date, "%Y-%m-%d").date()
+            end_date_raw = getattr(hobby, "end_date", "")
+            end_date_obj = (
+                datetime.strptime(end_date_raw, "%Y-%m-%d").date()
+                if end_date_raw else date.today()
+            )
+            return max((end_date_obj - start_date_obj).days, 0)
+        except Exception:
+            return -1
     
     def _create_hobby_row(self, parent, hobby, alternate_bg):
         """Create an expandable row for a single hobby in table format."""
-        from datetime import datetime
-        
         bg_color = COLORS["bg_light"] if alternate_bg else COLORS["bg_secondary"]
         
         # Container for row + expandable details
@@ -502,12 +614,7 @@ class PreviewWindow:
         
         # Calculate duration only
         try:
-            end_date_raw = getattr(hobby, "end_date", "")
-            end_date_obj = (
-                datetime.strptime(end_date_raw, "%Y-%m-%d").date()
-                if end_date_raw else date.today()
-            )
-            total_days = max((end_date_obj - start_date_obj).days, 0)
+            total_days = self._get_duration_days(hobby)
             years = total_days // 365
             remaining_days = total_days % 365
             months = remaining_days // 30
@@ -562,7 +669,7 @@ class PreviewWindow:
             anchor="w",
             width=self.COLUMN_WIDTHS[1],
         )
-        name_label.grid(row=0, column=1, padx=(0, 8), pady=8, ipady=3, sticky="w")
+        name_label.grid(row=0, column=1, padx=(0, 12), pady=8, ipady=3, sticky="w")
         
         # Started date
         started_text = start_date_obj.strftime("%b %d, %Y")
@@ -573,9 +680,9 @@ class PreviewWindow:
             bg=bg_color,
             fg=COLORS["text_secondary"],
             width=self.COLUMN_WIDTHS[2],
-            anchor="center",
+            anchor="w",
         )
-        started_label.grid(row=0, column=2, padx=4, pady=8, ipady=3, sticky="nsew")
+        started_label.grid(row=0, column=2, padx=(4, 14), pady=8, ipady=3, sticky="w")
         
         # Duration
         duration_label = tk.Label(
@@ -585,9 +692,9 @@ class PreviewWindow:
             bg=bg_color,
             fg=COLORS["text_secondary"],
             width=self.COLUMN_WIDTHS[3],
-            anchor="center",
+            anchor="w",
         )
-        duration_label.grid(row=0, column=3, padx=4, pady=8, ipady=3, sticky="nsew")
+        duration_label.grid(row=0, column=3, padx=(4, 10), pady=8, ipady=3, sticky="w")
         
         # Action buttons centered inside a fixed-width cell
         action_cell = tk.Frame(row, bg=bg_color, width=self.COLUMN_WIDTHS[4] * 8)
