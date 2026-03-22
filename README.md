@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  A polished desktop app for tracking hobbies, start dates, end dates, and personal notes with a clean dark interface.
+  A polished desktop app for tracking hobbies, milestones, and personal notes in a clean interface that feels fast, focused, and easy to use.
 </p>
 
 <p align="center">
@@ -17,6 +17,10 @@
   <img src="https://img.shields.io/badge/Status-Desktop%20Ready-22c55e?style=flat-square" alt="Desktop ready">
 </p>
 
+## Overview
+
+Hobby Tracker is a lightweight desktop app built for people who want a simple way to remember when a hobby started, when it stopped, and what made it meaningful along the way. It keeps the flow quick, the layout clean, and the information easy to manage.
+
 ## Why It Feels Nice
 
 - Clean dark theme with warm accent colors
@@ -24,15 +28,19 @@
 - Built-in calendar picker so dates are easy and consistent
 - Expandable hobby list with edit and delete actions
 - Modular Python structure that is easy to maintain
+- Designed to feel practical, not cluttered
 
 ## App Preview
 
 <p align="center">
-  <img src="assets/screenshots/main-window.png" alt="Main window of Hobby Tracker" width="78%">
+  <img src="assets/screenshots/main-window.png" alt="Main window of Hobby Tracker" width="48%">
+  <img src="assets/screenshots/all-hobbies.png" alt="All hobbies preview window" width="48%">
 </p>
 
 <p align="center">
-  <img src="assets/screenshots/all-hobbies.png" alt="All hobbies preview window" width="78%">
+  <strong>Left:</strong> quick hobby entry form
+  &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <strong>Right:</strong> full hobby overview with sorting, actions, and expandable details
 </p>
 
 ## What You Can Do
@@ -43,6 +51,14 @@
 - Expand each row to view extra details
 - Edit or delete entries whenever you want
 - Persist everything locally in `hobbies_data.json`
+
+## Highlights
+
+- Friendly entry flow with clear labels and hints
+- Calendar-based date selection for fast, mistake-free input
+- Overview screen that makes long-term hobby history easier to scan
+- Compact desktop experience with no unnecessary setup
+- Clean code split between UI, configuration, and data logic
 
 ## Quick Start
 
@@ -59,6 +75,10 @@
    ```
 
 3. Add your hobbies and open `View All Hobbies` to manage them.
+
+## Built With Care
+
+The project is organized with a small but clean architecture so it is easy to extend. UI components live in `gui/`, persistence lives in `logic/`, and shared settings stay centralized in `config.py`.
 
 ## Project Structure
 
@@ -93,6 +113,7 @@ hobby-tracker/
 - `main.py` is the current entry point
 - `app.py` is kept only as a deprecated reference
 - The app is designed for local desktop use and stores data on the machine
+- The current README preview images are included inside `assets/screenshots/` for GitHub display
 
 ## License
 
