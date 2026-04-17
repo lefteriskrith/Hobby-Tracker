@@ -18,30 +18,43 @@ class HobbyTrackerApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title(APP_TITLE)
-        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
         self.root.resizable(RESIZABLE, RESIZABLE)
         self.root.configure(bg=COLORS["bg_main"])
-        
+        self.root.update_idletasks()
+        sw = self.root.winfo_screenwidth()
+        sh = self.root.winfo_screenheight()
+        x = (sw - WINDOW_WIDTH) // 2
+        y = (sh - WINDOW_HEIGHT) // 2
+        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{x}+{y}")
+
         self.data_manager = DataManager()
         self.date_field = None
         self.comments_field = None
         self._edit_old_name = None
-        
+        self.save_btn = None
+        self._status_after_id = None
+
         self._build_ui()
+        self._make_icon()
+        self.root.bind("<Return>", lambda e: self.add_hobby())
+        self.root.bind("<Escape>", lambda e: self.clear_all())
     
     def _build_ui(self):
         """Build the user interface."""
+        # Top accent bar
+        tk.Frame(self.root, bg=COLORS["button_primary"], height=3).pack(fill="x", side="top")
+
         # Main container
-        main_frame = tk.Frame(self.root, bg=COLORS["bg_main"], padx=20, pady=20)
+        main_frame = tk.Frame(self.root, bg=COLORS["bg_main"], padx=24, pady=16)
         main_frame.pack(fill="both", expand=True)
-        
+
         # Header with Preview button
         header_frame = tk.Frame(main_frame, bg=COLORS["bg_main"])
-        header_frame.pack(fill="x", pady=(0, 15))
-        
+        header_frame.pack(fill="x", pady=(0, 0))
+
         left_frame = tk.Frame(header_frame, bg=COLORS["bg_main"])
         left_frame.pack(side="left", fill="both", expand=True)
-        
+
         tk.Label(
             left_frame,
             text=MESSAGES["main_title"],
@@ -49,32 +62,39 @@ class HobbyTrackerApp:
             bg=COLORS["bg_main"],
             fg=COLORS["text_primary"],
         ).pack(anchor="w")
-        
+
         tk.Label(
             left_frame,
             text=MESSAGES["subtitle"],
             font=FONTS["subtitle"],
             bg=COLORS["bg_main"],
             fg=COLORS["text_secondary"],
-        ).pack(anchor="w", pady=(4, 0))
-        
-        # Preview button - PROMINENT
-        tk.Button(
+        ).pack(anchor="w", pady=(3, 0))
+
+        view_btn = tk.Button(
             header_frame,
-            text="📊 View All Hobbies",
+            text="View All",
             command=self._show_preview,
-            font=("Segoe UI", 11, "bold"),
-            bg=COLORS["accent_warm"],
+            font=("Segoe UI", 9, "bold"),
+            bg=COLORS["button_accent"],
             fg="white",
             activebackground=COLORS["button_accent_hover"],
+            activeforeground="white",
             relief="flat",
-            padx=16,
-            pady=8,
-        ).pack(side="right", anchor="e")
-        
+            padx=14,
+            pady=7,
+            cursor="hand2",
+        )
+        view_btn.pack(side="right", anchor="e")
+        view_btn.bind("<Enter>", lambda e: view_btn.config(bg=COLORS["button_accent_hover"]))
+        view_btn.bind("<Leave>", lambda e: view_btn.config(bg=COLORS["button_accent"]))
+
+        # Thin divider under header
+        tk.Frame(main_frame, bg=COLORS["border"], height=1).pack(fill="x", pady=(12, 0))
+
         # Content area
         content_frame = tk.Frame(main_frame, bg=COLORS["bg_main"])
-        content_frame.pack(fill="both", expand=True, pady=(10, 0))
+        content_frame.pack(fill="both", expand=True, pady=(12, 0))
         
         self._build_form(content_frame)
         
@@ -89,16 +109,16 @@ class HobbyTrackerApp:
             MESSAGES["hobby_label"],
             MESSAGES["hobby_hint"],
         )
-        self.hobby_field.pack(fill="x", pady=(0, 12))
-        
+        self.hobby_field.pack(fill="x", pady=(0, 10))
+
         # Date input field (manual entry + picker)
         self.date_field = DateInputField(parent)
-        self.date_field.pack(fill="x", pady=(0, 12))
-        
+        self.date_field.pack(fill="x", pady=(0, 10))
+
         # End date field (optional - when hobby was stopped)
         self.end_date_field = DateInputField(parent, label_text="When did you stop? (optional)")
-        self.end_date_field.pack(fill="x", pady=(0, 12))
-        
+        self.end_date_field.pack(fill="x", pady=(0, 10))
+
         # Comments field
         self.comments_field = FormField(
             parent,
@@ -106,15 +126,18 @@ class HobbyTrackerApp:
             "Add any notes about this hobby",
             is_multiline=True,
         )
-        self.comments_field.pack(fill="x", pady=(0, 12))
-        
+        self.comments_field.pack(fill="x", pady=(0, 10))
+
+        # Thin divider before buttons
+        tk.Frame(parent, bg=COLORS["border"], height=1).pack(fill="x", pady=(4, 0))
+
         # Buttons
         button_frame = tk.Frame(parent, bg=COLORS["bg_main"])
-        button_frame.pack(fill="x", pady=(10, 12))
+        button_frame.pack(fill="x", pady=(12, 8))
         
-        tk.Button(
+        self.save_btn = tk.Button(
             button_frame,
-            text="✅ Add new hobby",
+            text="Add Hobby",
             command=self.add_hobby,
             font=FONTS["label"],
             bg=COLORS["button_primary"],
@@ -124,45 +147,49 @@ class HobbyTrackerApp:
             relief="flat",
             padx=20,
             pady=8,
-        ).pack(side="left")
-        
-        tk.Button(
+            cursor="hand2",
+        )
+        self.save_btn.pack(side="left")
+        self.save_btn.bind("<Enter>", lambda e: self.save_btn.config(bg=COLORS["button_primary_hover"]))
+        self.save_btn.bind("<Leave>", lambda e: self.save_btn.config(bg=COLORS["button_primary"]))
+
+        clear_btn = tk.Button(
             button_frame,
             text="Clear",
             command=self.clear_all,
             font=FONTS["normal"],
             bg=COLORS["button_secondary"],
-            fg=COLORS["text_primary"],
+            fg=COLORS["text_secondary"],
             activebackground=COLORS["button_secondary_hover"],
             activeforeground=COLORS["text_primary"],
             relief="flat",
             padx=15,
             pady=8,
-        ).pack(side="left", padx=(8, 0))
-        
-        # Result display
-        self.result_text = tk.Text(
-            parent,
-            font=FONTS["normal"],
-            bg=COLORS["bg_light"],
-            fg=COLORS["text_light"],
-            relief="solid",
-            bd=1,
-            height=4,
-            wrap="word",
+            cursor="hand2",
         )
-        self.result_text.pack(fill="both", expand=True, pady=(0, 10))
-        self.result_text.insert("1.0", MESSAGES["result_hint"])
-        self.result_text.config(state="disabled")
+        clear_btn.pack(side="left", padx=(8, 0))
+        clear_btn.bind("<Enter>", lambda e: clear_btn.config(bg=COLORS["button_secondary_hover"]))
+        clear_btn.bind("<Leave>", lambda e: clear_btn.config(bg=COLORS["button_secondary"]))
+        
+        # Status label
+        self.status_label = tk.Label(
+            parent,
+            text=MESSAGES["result_hint"],
+            font=FONTS["hint"],
+            bg=COLORS["bg_main"],
+            fg=COLORS["text_hint"],
+            anchor="w",
+        )
+        self.status_label.pack(fill="x", pady=(4, 0))
     
     def _build_footer(self, parent):
         """Build the footer section."""
         footer_frame = tk.Frame(parent, bg=COLORS["bg_main"])
-        footer_frame.pack(fill="x", side="bottom", pady=(10, 0))
-        
+        footer_frame.pack(fill="x", side="bottom", pady=(6, 0))
+
         tk.Label(
             footer_frame,
-            text=f"© {OWNER}",
+            text=f"© {OWNER}  ·  Press Enter to save  ·  Esc to clear",
             font=FONTS["small"],
             bg=COLORS["bg_main"],
             fg=COLORS["text_hint"],
@@ -202,13 +229,13 @@ class HobbyTrackerApp:
         
         if old_name:
             self.data_manager.update_hobby(old_name, hobby)
-            messagebox.showinfo("Success", f"Updated '{hobby_name}'!")
             self._edit_old_name = None
+            self._set_status(f"✓ Updated '{hobby_name}'", success=True)
         else:
             self.data_manager.save_hobby(hobby)
-            messagebox.showinfo("Success", f"Added '{hobby_name}'!")
+            self._set_status(f"✓ Added '{hobby_name}'", success=True)
         
-        self.clear_all()
+        self.clear_all(skip_confirm=True)
     
     def _show_preview(self):
         """Show preview of all hobbies."""
@@ -241,31 +268,58 @@ class HobbyTrackerApp:
         if hasattr(hobby, 'comments'):
             self.comments_field.entry.delete("1.0", tk.END)
             self.comments_field.entry.insert("1.0", hobby.comments)
-        # Store the old name for update
         self._edit_old_name = hobby.name
-        messagebox.showinfo("Edit Mode", f"Editing '{hobby.name}'. Click 'Add new hobby' to save changes.")
+        self.save_btn.config(text="Save Changes")
+        self._set_status(f"Editing '{hobby.name}' — press Enter or click Save Changes.")
     
     def _delete_hobby(self, hobby):
         """Delete a hobby."""
         if messagebox.askyesno("Confirm Delete", f"Delete '{hobby.name}' permanently?"):
             self.data_manager.delete_hobby(hobby.name)
-            messagebox.showinfo("Deleted", f"'{hobby.name}' has been deleted.")
-            # Refresh preview
+            self._set_status(f"✓ Deleted '{hobby.name}'", success=True)
             self._show_preview()
     
-    def clear_all(self):
+    def clear_all(self, skip_confirm=False):
         """Clear all fields."""
+        if not skip_confirm and self._is_form_dirty():
+            if not messagebox.askyesno("Clear form", "Discard unsaved changes?"):
+                return
         self.hobby_field.clear()
         self.date_field.clear()
         self.end_date_field.clear()
         self.comments_field.clear()
-        
-        self.result_text.config(state="normal")
-        self.result_text.delete("1.0", tk.END)
-        self.result_text.insert("1.0", MESSAGES["result_hint"])
-        self.result_text.config(state="disabled")
+        self._set_status(MESSAGES["result_hint"])
         self._edit_old_name = None
+        if self.save_btn:
+            self.save_btn.config(text="Add Hobby")
     
+    def _make_icon(self):
+        img = tk.PhotoImage(width=16, height=16)
+        orange = COLORS["button_primary"]
+        for y in range(16):
+            img.put("{" + " ".join([orange] * 16) + "}", to=(0, y))
+        self.root.iconphoto(True, img)
+        self._app_icon = img
+
+    def _set_status(self, text, success=False):
+        if self._status_after_id:
+            self.root.after_cancel(self._status_after_id)
+            self._status_after_id = None
+        color = COLORS["accent_soft"] if success else COLORS["text_hint"]
+        self.status_label.config(text=text, fg=color)
+        if success:
+            self._status_after_id = self.root.after(3500, self._fade_status)
+
+    def _fade_status(self):
+        self._status_after_id = None
+        self.status_label.config(text=MESSAGES["result_hint"], fg=COLORS["text_hint"])
+
+    def _is_form_dirty(self):
+        has_name = bool(self.hobby_field.get().strip())
+        has_date = self.date_field.get_date() is not None
+        has_comments = bool(self.comments_field.entry.get("1.0", tk.END).strip())
+        return has_name or has_date or has_comments
+
     def run(self):
         """Start the application."""
         self.root.mainloop()

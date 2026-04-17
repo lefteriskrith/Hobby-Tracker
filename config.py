@@ -6,7 +6,7 @@ OWNER = "LefterisKr"
 
 # Window Configuration
 WINDOW_WIDTH = 520
-WINDOW_HEIGHT = 550
+WINDOW_HEIGHT = 610
 RESIZABLE = False
 
 # Date Format
@@ -70,7 +70,7 @@ COLORS = {
 
 # Font Sizes
 FONTS = {
-    "title": ("Segoe UI", 16, "bold"),
+    "title": ("Segoe UI", 17, "bold"),
     "subtitle": ("Segoe UI", 9),
     "label": ("Segoe UI", 10, "bold"),
     "normal": ("Segoe UI", 10),

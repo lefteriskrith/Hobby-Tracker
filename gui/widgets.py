@@ -1,6 +1,8 @@
 """Custom GUI widgets for Hobby Tracker."""
 
+import csv
 import tkinter as tk
+from tkinter import filedialog
 from datetime import datetime, date
 from config import COLORS, FONTS
 
@@ -27,12 +29,16 @@ class DateInputField(tk.Frame):
         self.entry = tk.Entry(
             input_frame,
             font=FONTS["normal"],
-            bg=COLORS["bg_light"],
+            bg=COLORS["bg_accent"],
             fg=COLORS["text_primary"],
-            relief="solid",
-            bd=1,
+            relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground=COLORS["border_light"],
+            highlightcolor=COLORS["button_accent"],
+            insertbackground=COLORS["text_primary"],
         )
-        self.entry.pack(side="left", fill="both", expand=True, padx=(0, 8))
+        self.entry.pack(side="left", fill="both", expand=True, padx=(0, 8), ipady=5)
         self.entry.insert(0, "YYYY-MM-DD")
         self.entry.bind("<FocusIn>", self._on_focus_in)
         self.entry.bind("<FocusOut>", self._on_focus_out)
@@ -101,17 +107,20 @@ class DatePickerButton(tk.Button):
         
         super().__init__(
             parent,
-            text="📅 Select Date",
+            text="📅 Pick",
             font=FONTS["normal"],
             bg=COLORS["button_secondary"],
-            fg=COLORS["text_primary"],
+            fg=COLORS["text_secondary"],
             activebackground=COLORS["button_secondary_hover"],
             activeforeground=COLORS["text_primary"],
             relief="flat",
             pady=6,
+            cursor="hand2",
             command=self._open_calendar,
             **kwargs
         )
+        self.bind("<Enter>", lambda e: self.config(bg=COLORS["button_secondary_hover"]))
+        self.bind("<Leave>", lambda e: self.config(bg=COLORS["button_secondary"]))
     
     def _open_calendar(self):
         """Open a calendar window for date selection."""
@@ -348,10 +357,13 @@ class FormField(tk.Frame):
             self.entry = tk.Text(
                 self,
                 font=FONTS["normal"],
-                bg=COLORS["bg_light"],
+                bg=COLORS["bg_accent"],
                 fg=COLORS["text_primary"],
-                relief="solid",
-                bd=1,
+                relief="flat",
+                bd=0,
+                highlightthickness=1,
+                highlightbackground=COLORS["border_light"],
+                highlightcolor=COLORS["button_accent"],
                 insertbackground=COLORS["text_primary"],
                 height=2,
             )
@@ -359,14 +371,17 @@ class FormField(tk.Frame):
             self.entry = tk.Entry(
                 self,
                 font=FONTS["normal"],
-                bg=COLORS["bg_light"],
+                bg=COLORS["bg_accent"],
                 fg=COLORS["text_primary"],
-                relief="solid",
-                bd=1,
+                relief="flat",
+                bd=0,
+                highlightthickness=1,
+                highlightbackground=COLORS["border_light"],
+                highlightcolor=COLORS["button_accent"],
                 insertbackground=COLORS["text_primary"],
             )
         
-        self.entry.pack(fill="x", pady=(6, 4))
+        self.entry.pack(fill="x", pady=(6, 4), ipady=5)
         
         if hint_text:
             tk.Label(
@@ -400,37 +415,128 @@ class PreviewWindow:
     COLUMN_WIDTHS = (5, 28, 18, 16, 18)
     
     def __init__(self, hobbies, on_edit_callback=None, on_delete_callback=None):
-        self.hobbies = hobbies
+        self.hobbies = list(hobbies)
+        self._all_hobbies = list(hobbies)
         self.on_edit_callback = on_edit_callback
         self.on_delete_callback = on_delete_callback
         self.sort_column = None
         self.sort_descending = False
         self.sortable_headers = {}
         self.rows_frame = None
+        self.search_var = None
         self.window = tk.Toplevel()
-        self.window.title("All Hobbies Preview")
-        self.window.geometry("900x600")
+        self.window.title("All Hobbies")
         self.window.configure(bg=COLORS["bg_main"])
+        self.window.update_idletasks()
+        sw = self.window.winfo_screenwidth()
+        sh = self.window.winfo_screenheight()
+        w = min(980, sw - 80)
+        h = min(int(sh * 0.85), sh - 80)
+        self.window.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
+        self.window.minsize(700, 500)
         
         self._build_preview()
     
     def _build_preview(self):
         """Build the preview window with table-like layout."""
-        # Header
-        header = tk.Frame(self.window, bg=COLORS["button_primary"])
-        header.pack(fill="x", padx=0, pady=0)
-        
+        # Header row
+        header = tk.Frame(self.window, bg=COLORS["bg_main"])
+        header.pack(fill="x", padx=20, pady=(16, 0))
+
         tk.Label(
             header,
-            text="📊 All Your Hobbies",
-            font=("Segoe UI", 16, "bold"),
-            bg=COLORS["button_primary"],
-            fg="white",
-        ).pack(anchor="w", padx=20, pady=15)
+            text="All Your Hobbies",
+            font=("Segoe UI", 15, "bold"),
+            bg=COLORS["bg_main"],
+            fg=COLORS["text_primary"],
+        ).pack(side="left", anchor="w")
+
+        n = len(self._all_hobbies)
+        tk.Label(
+            header,
+            text=f"{n} {'hobby' if n == 1 else 'hobbies'}",
+            font=("Segoe UI", 9),
+            bg=COLORS["bg_main"],
+            fg=COLORS["text_hint"],
+        ).pack(side="left", anchor="s", padx=(10, 0), pady=(0, 2))
+
+        export_btn = tk.Button(
+            header,
+            text="Export CSV",
+            command=self._export_csv,
+            font=("Segoe UI", 8, "bold"),
+            bg=COLORS["button_secondary"],
+            fg=COLORS["text_secondary"],
+            activebackground=COLORS["button_secondary_hover"],
+            activeforeground=COLORS["text_primary"],
+            relief="flat",
+            padx=10,
+            pady=4,
+            cursor="hand2",
+        )
+        export_btn.pack(side="right", anchor="e")
+        export_btn.bind("<Enter>", lambda e: export_btn.config(bg=COLORS["button_secondary_hover"]))
+        export_btn.bind("<Leave>", lambda e: export_btn.config(bg=COLORS["button_secondary"]))
+
+        # Thin divider
+        tk.Frame(self.window, bg=COLORS["border"], height=1).pack(fill="x", padx=20, pady=(10, 0))
+
+        # Stats panel
+        stats_frame = tk.Frame(self.window, bg=COLORS["bg_main"])
+        stats_frame.pack(fill="x", padx=20, pady=(10, 0))
+
+        active_count = sum(1 for h in self._all_hobbies if not getattr(h, "end_date", ""))
+        stopped_count = len(self._all_hobbies) - active_count
+
+        for label, value, color in [
+            ("Total", str(len(self._all_hobbies)), COLORS["text_primary"]),
+            ("Active", str(active_count), "#4ade80"),
+            ("Stopped", str(stopped_count), COLORS["text_hint"]),
+        ]:
+            box = tk.Frame(stats_frame, bg=COLORS["bg_light"], padx=18, pady=8)
+            box.pack(side="left", padx=(0, 8))
+            tk.Label(box, text=value, font=("Segoe UI", 15, "bold"), bg=COLORS["bg_light"], fg=color).pack()
+            tk.Label(box, text=label, font=("Segoe UI", 8), bg=COLORS["bg_light"], fg=COLORS["text_hint"]).pack()
+
+        # Search bar
+        search_frame = tk.Frame(self.window, bg=COLORS["bg_main"])
+        search_frame.pack(fill="x", padx=10, pady=(10, 0))
+
+        self.search_var = tk.StringVar()
+        self.search_var.trace("w", self._on_search)
+
+        search_entry = tk.Entry(
+            search_frame,
+            textvariable=self.search_var,
+            font=FONTS["normal"],
+            bg=COLORS["bg_accent"],
+            fg=COLORS["text_hint"],
+            relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground=COLORS["border_light"],
+            highlightcolor=COLORS["button_accent"],
+            insertbackground=COLORS["text_primary"],
+        )
+        search_entry.pack(fill="x", ipady=6)
+        search_entry.insert(0, "Search hobbies...")
+
+        def _sf_in(e):
+            if search_entry.get() == "Search hobbies...":
+                search_entry.delete(0, tk.END)
+                search_entry.config(fg=COLORS["text_primary"])
+
+        def _sf_out(e):
+            if not search_entry.get():
+                search_entry.insert(0, "Search hobbies...")
+                search_entry.config(fg=COLORS["text_hint"])
+
+        search_entry.bind("<FocusIn>", _sf_in)
+        search_entry.bind("<FocusOut>", _sf_out)
         
         # Table header
-        table_header = tk.Frame(self.window, bg=COLORS["bg_accent"])
-        table_header.pack(fill="x", padx=(9, 15), pady=(15, 5))
+        table_header = tk.Frame(self.window, bg=COLORS["bg_light"])
+        table_header.pack(fill="x", padx=(9, 15), pady=(12, 2))
         
         headers = ["", "Hobby Name", "Started", "Duration", "Actions"]
         
@@ -454,9 +560,9 @@ class PreviewWindow:
                     table_header,
                     text=header_text,
                     command=lambda key=sort_key: self._sort_by(key),
-                    font=("Segoe UI", 10, "bold"),
-                    bg=COLORS["bg_accent"],
-                    fg=COLORS["text_primary"],
+                    font=("Segoe UI", 9, "bold"),
+                    bg=COLORS["bg_light"],
+                    fg=COLORS["text_hint"],
                     activebackground=COLORS["bg_hover"],
                     activeforeground=COLORS["text_primary"],
                     relief="flat",
@@ -465,18 +571,18 @@ class PreviewWindow:
                     cursor="hand2",
                     anchor="w" if col_index in {1, 2, 3} else "center",
                 )
-                btn.grid(row=0, column=col_index, padx=header_padx, pady=8, ipady=5, sticky="nsew")
+                btn.grid(row=0, column=col_index, padx=header_padx, pady=6, ipady=4, sticky="nsew")
                 self.sortable_headers[sort_key] = btn
             else:
                 tk.Label(
                     table_header,
                     text=header_text,
-                    font=("Segoe UI", 10, "bold"),
-                    bg=COLORS["bg_accent"],
-                    fg=COLORS["text_primary"],
+                    font=("Segoe UI", 9, "bold"),
+                    bg=COLORS["bg_light"],
+                    fg=COLORS["text_hint"],
                     width=width,
                     anchor="w" if col_index in {1, 2, 3} else "center",
-                ).grid(row=0, column=col_index, padx=header_padx, pady=8, ipady=5, sticky="nsew")
+                ).grid(row=0, column=col_index, padx=header_padx, pady=6, ipady=4, sticky="nsew")
         
         # Scrollable frame for hobbies
         canvas_frame = tk.Frame(self.window, bg=COLORS["bg_main"])
@@ -604,14 +710,15 @@ class PreviewWindow:
     def _create_hobby_row(self, parent, hobby, alternate_bg):
         """Create an expandable row for a single hobby in table format."""
         bg_color = COLORS["bg_light"] if alternate_bg else COLORS["bg_secondary"]
-        
+        hover_color = COLORS["bg_hover"]
+
         # Container for row + expandable details
         container = tk.Frame(parent, bg=bg_color)
-        container.pack(fill="x", pady=2, padx=0)
-        
+        container.pack(fill="x", pady=0, padx=0)
+
         # Parse dates
         start_date_obj = datetime.strptime(hobby.start_date, "%Y-%m-%d").date()
-        
+
         # Calculate duration only
         try:
             total_days = self._get_duration_days(hobby)
@@ -622,15 +729,28 @@ class PreviewWindow:
             duration = f"{years}y {months}mo {days}d"
         except Exception:
             duration = "N/A"
-        
-        # Main row (no expand toggle, plain aligned table)
-        row = tk.Frame(container, bg=bg_color, relief="solid", bd=1)
+
+        row = tk.Frame(container, bg=bg_color)
         row.pack(fill="x", padx=0, pady=0)
+
+        def _on_row_enter(e, widgets):
+            for w in widgets:
+                try:
+                    w.config(bg=hover_color)
+                except Exception:
+                    pass
+
+        def _on_row_leave(e, widgets):
+            for w in widgets:
+                try:
+                    w.config(bg=bg_color)
+                except Exception:
+                    pass
         
         for col_index in range(5):
             row.grid_columnconfigure(col_index, weight=0, minsize=self.COLUMN_WIDTHS[col_index] * 8)
 
-        details_frame = tk.Frame(container, bg=COLORS["bg_accent"], relief="solid", bd=1)
+        details_frame = tk.Frame(container, bg=COLORS["bg_accent"])
 
         toggle_text = tk.StringVar(value="▶")
 
@@ -642,23 +762,31 @@ class PreviewWindow:
                 details_frame.pack(fill="x", padx=18, pady=(0, 4))
                 toggle_text.set("▼")
 
+        # Col 0: status dot + expand toggle
+        is_active = not getattr(hobby, "end_date", "")
+        dot_color = "#4ade80" if is_active else "#6b7280"
+
+        col0 = tk.Frame(row, bg=bg_color)
+        col0.grid(row=0, column=0, padx=(8, 4), pady=8, sticky="w")
+
+        tk.Label(col0, text="●", font=("Segoe UI", 7), bg=bg_color, fg=dot_color).pack(side="left")
+
         toggle_btn = tk.Button(
-            row,
+            col0,
             textvariable=toggle_text,
             command=_toggle_details,
-            font=("Segoe UI", 9, "bold"),
-            bg=COLORS["button_secondary"],
-            fg=COLORS["text_primary"],
-            activebackground=COLORS["button_secondary_hover"],
+            font=("Segoe UI", 8),
+            bg=bg_color,
+            fg=COLORS["text_hint"],
+            activebackground=hover_color,
             activeforeground=COLORS["text_primary"],
             relief="flat",
             bd=0,
-            width=2,
-            padx=0,
-            pady=2,
+            padx=2,
+            pady=0,
             cursor="hand2",
         )
-        toggle_btn.grid(row=0, column=0, padx=(8, 2), pady=8, sticky="w")
+        toggle_btn.pack(side="left", padx=(4, 0))
 
         name_label = tk.Label(
             row,
@@ -713,8 +841,8 @@ class PreviewWindow:
                 bg=COLORS["button_accent"],
                 fg="white",
                 activebackground=COLORS["button_accent_hover"],
-                relief="raised",
-                bd=1,
+                relief="flat",
+                bd=0,
                 width=7,
                 height=1,
                 padx=2,
@@ -732,8 +860,8 @@ class PreviewWindow:
                 bg="#e85d75",
                 fg="white",
                 activebackground="#d94a63",
-                relief="raised",
-                bd=1,
+                relief="flat",
+                bd=0,
                 width=7,
                 height=1,
                 padx=2,
@@ -743,6 +871,40 @@ class PreviewWindow:
             delete_btn.pack(side="left")
 
         self._build_hobby_details(details_frame, hobby, start_date_obj, duration)
+
+        hover_widgets = [container, row, col0, name_label, started_label, duration_label, action_cell, action_frame]
+        for w in hover_widgets:
+            w.bind("<Enter>", lambda e, ws=hover_widgets: _on_row_enter(e, ws))
+            w.bind("<Leave>", lambda e, ws=hover_widgets: _on_row_leave(e, ws))
+
+        if self.on_edit_callback:
+            def _dbl_edit(e, h=hobby):
+                self.on_edit_callback(h)
+                self.window.destroy()
+            for w in [row, col0, name_label, started_label, duration_label]:
+                w.bind("<Double-Button-1>", _dbl_edit)
+
+    def _export_csv(self):
+        path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv")],
+            initialfile="hobbies.csv",
+            parent=self.window,
+        )
+        if not path:
+            return
+        with open(path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=["name", "start_date", "end_date", "added_date", "comments"])
+            writer.writeheader()
+            writer.writerows([h.to_dict() for h in self._all_hobbies])
+
+    def _on_search(self, *args):
+        query = self.search_var.get().strip().lower()
+        if query == "search hobbies..." or not query:
+            self.hobbies = list(self._all_hobbies)
+        else:
+            self.hobbies = [h for h in self._all_hobbies if query in h.name.lower()]
+        self._render_hobby_rows()
 
     def _build_hobby_details(self, parent, hobby, start_date_obj, duration):
         """Build the expandable details section for a hobby."""
