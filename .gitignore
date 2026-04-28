@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# PyInstaller build artifacts
+build/
+dist/
+
+# User data (personal, machine-specific)
+hobbies_data.json
+
+# Archives
+*.zip
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace

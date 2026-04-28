@@ -1,4 +1,14 @@
-"""Main application window for Hobby Tracker."""
+"""
+Main application window for Hobby Tracker.
+
+HobbyTrackerApp owns the root Tk window, builds the form, and wires together
+the DataManager (model) and the widgets (view).
+
+Edit-mode flow:
+  _edit_hobby() loads a hobby into the form and sets _edit_old_name.
+  add_hobby()   detects _edit_old_name and calls update_hobby() instead of save_hobby().
+  clear_all()   resets _edit_old_name and restores the button label.
+"""
 
 import tkinter as tk
 from tkinter import messagebox

@@ -1,4 +1,15 @@
-"""Custom GUI widgets for Hobby Tracker."""
+"""
+Reusable GUI widgets for Hobby Tracker.
+
+FormField        — label + entry (single-line or multiline) + hint text.
+DateInputField   — label + manual entry + DatePickerButton in one row.
+DatePickerButton — button that opens a CalendarWidget Toplevel.
+CalendarWidget   — month/year grid built entirely from tk.Button cells;
+                   no external date library required.
+PreviewWindow    — sortable, searchable, scrollable hobby table in a Toplevel.
+                   Uses the tk.Canvas + inner Frame pattern to support smooth
+                   vertical scrolling over an arbitrary number of rows.
+"""
 
 import csv
 import tkinter as tk
