@@ -1,7 +1,7 @@
 # Hobby Tracker
 
 <p align="center">
-  <a href="https://github.com/lefteriskrith/hobby-tracker/raw/refs/heads/main/HobbyTracker.zip">
+  <a href="https://github.com/lefteriskrith/Hobby-Tracker/raw/refs/heads/main/dist/HobbyTracker.zip">
     <img src="https://img.shields.io/badge/Download-HobbyTracker.zip-f59e0b?style=for-the-badge&logo=github&logoColor=white&labelColor=111827" alt="Download HobbyTracker.zip">
   </a>
 </p>
